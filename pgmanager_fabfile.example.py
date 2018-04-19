@@ -1,14 +1,14 @@
 
 from decouple import config
-from fabric.api import env
-from fabric.api import task
 from pgmanager import *
+from pgmanager import db_environ
+from pgmanager import env
 
 
 # ENVIRONMENTS
 
 
-@task
+@db_environ
 def local():
     """ DATABASE LOCAL """
     env.database_url = config('DATABASE_URL_LOCAL', '')
