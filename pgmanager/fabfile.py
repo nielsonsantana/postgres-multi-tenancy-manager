@@ -1,7 +1,6 @@
 import dj_database_url
 import getpass
 
-from decouple import config
 from fabric.api import *
 from fabric.api import task
 from fabric.api import env
@@ -14,6 +13,16 @@ from fabric.api import local as run_local
 env.grant_on_super_user = False
 env.extra_dump = ''
 env.extra_restore = ''
+
+
+# OPTIONS
+
+@task
+def binary(dump_path=None):
+    env.extra_dump = '-Fc '
+    env.extra_restore = '-Fc '
+    env.dump_binary = True
+
 
 # TASKS
 
@@ -226,18 +235,9 @@ def dump(database=None, dump_path=None):
 
 @task
 def dumpall(dump_path=None):
-
-    command = ' < %s ' % dump_path
-    run_psql_direct(command)
+    pass
 
 
 @task
 def restoreall(database=None, dump_path=None):
     pass
-
-
-@task
-def binary(dump_path=None):
-    env.extra_dump = '-Fc '
-    env.extra_restore = '-Fc '
-    env.dump_binary = True
