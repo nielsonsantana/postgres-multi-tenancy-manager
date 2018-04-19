@@ -3,8 +3,9 @@ import getpass
 
 from decouple import config
 from fabric.api import *
-from fabric.api import local as run_local
+from fabric.api import task
 from fabric.api import env
+from fabric.api import local as run_local
 
 
 # BASED in https://wiki.postgresql.org/wiki/Shared_Database_Hosting
@@ -14,43 +15,8 @@ env.grant_on_super_user = False
 env.extra_dump = ''
 env.extra_restore = ''
 
-# ENVIRONMENTS
-
-
-@task
-def local():
-    """ DATABASE LOCAL """
-    env.database_url = config('DATABASE_URL_LOCAL', '')
-    env.db_super_users = ['postgres']
-    env.environment = 'local'
-
-
-@task
-def staging():
-    """ DATABASE STAGING """
-    env.database_url = config('DATABASE_URL_STAGING', '')
-    env.db_super_users = ['genomika']
-    env.environment = 'staging'
-    env.grant_on_super_user = True
-
-
-@task
-def staging_do():
-    """ DATABASE STAGING """
-    env.database_url = config('DATABASE_URL_STAGING_DIGITALOCEAN', '')
-    env.db_super_users = ['parceiro']
-    env.environment = 'staging'
-
-
-@task
-def production():
-    """ DATABASE PRODUCTION """
-    env.database_url = config('DATABASE_URL_PRODUCTION', '')
-    env.db_super_users = ['genomika']
-    env.environment = 'production'
-
-
 # TASKS
+
 
 def run_psql(command):
 
@@ -93,7 +59,7 @@ def show_env():
 
 
 @task
-def setup_database():
+def revoke_default_permissions():
     """Should be runned once per Postgres Server"""
     msg_warnning = """
     This command should be executed only one time for postgres server.

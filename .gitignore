@@ -106,3 +106,4 @@ venv.bak/
 # Private variables
 .env
 passwords-database.txt
+pgmanager_fabfile.py
