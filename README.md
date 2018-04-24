@@ -7,23 +7,32 @@ pgmanager was built on top of fabric. Also is based on the guide [Shared Postgre
 * Create an aditional user to a database
 * Remove an aditional user
 * Remove database + main user
+* Dump database (binary or plan sql)
+* Restore database (binary or plan sql)
 
 ## Install
 
 ### Dependences
-Before install pgmanager, is need install the lastest version of postgres-client.
+Before install pgmanager, is need install the latest version of postgres-client.
 
 ### Install
 Install pgmanager globally using this command
 
     pip install -e git://github.com/nielsonsantana/postgres-multi-tenancy-manager.git#egg=pgmanager
 
-## Usage
+## Configure
 
-First, create a file `.env`. Then, in the file put your databases environments:
+In order to configure pgmanager, there two options: create a file `.env` or using environment variables.
+
+Create a file named `.env` and put the databases environments:
 
     DATABASE_URL_LOCAL="postgresql://<username>:<password>@127.0.0.1:5432"
     DATABASE_URL_STAGING="postgresql://<username>:<password>@127.0.0.1:5432"
+
+Using environment variables:
+
+    export DATABASE_URL_LOCAL="postgresql://<username>:<password>@127.0.0.1:5432"
+    export DATABASE_URL_STAGING="postgresql://<username>:<password>@127.0.0.1:5432"
 
 Then, copy the file `pgmanager_fabfile.example.py` on same directory of `.env` and start define the database environments.
 
@@ -40,6 +49,7 @@ Then, copy the file `pgmanager_fabfile.example.py` on same directory of `.env` a
         env.environment = 'local'
 
 
+## Usage
 
 ### Revoke Default Permissions
 

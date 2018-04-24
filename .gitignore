@@ -103,7 +103,9 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-# Private variables
+# Private files
 .env
 passwords-database.txt
 pgmanager_fabfile.py
+*.backup
+*.sql
