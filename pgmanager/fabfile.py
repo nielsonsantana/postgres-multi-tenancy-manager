@@ -15,6 +15,13 @@ env.extra_dump = ''
 env.extra_restore = ''
 
 
+def confirm_operation(msg, expected='yes'):
+    output = raw_input(msg)
+    if output.lower() == expected.lower():
+        return True
+    return False
+
+
 # OPTIONS
 
 @task
@@ -27,7 +34,7 @@ def binary(dump_path=None):
 # TASKS
 
 
-def run_psql(command):
+def run_psql(command, dry_run=True):
 
     tmp_command = command.replace('    ', '')
 
@@ -95,11 +102,15 @@ def test_select():
 @task
 def create_db_user(user=None, database=None, password=None):
 
-    user = raw_input('Username: \n>')
+    if not user:
+        user = raw_input('Username: \n>')
+    if not password:
+        password = getpass.getpass('Password:\n> ')
+    if not database:
+        database = raw_input('Database Name \n>')
+
     env.db_main_user = user
-    password = getpass.getpass('Password:\n> ')
     env.db_main_user_pass = password
-    database = raw_input('Database Name \n>')
     env.db_name = database
 
     command = ["""
@@ -112,16 +123,21 @@ def create_db_user(user=None, database=None, password=None):
     for super_user in env.db_super_users:
         env.db_super_user = super_user
         if env.grant_on_super_user:
-            command.append("\nGRANT %(db_main_user)s TO %(db_super_user)s;" % env)
+            command.append(
+                "\nGRANT %(db_main_user)s TO %(db_super_user)s;" % env)
             command.append("\nGRANT %(db_name)s TO %(db_super_user)s;" % env)
 
     command = ''.join(command)
-    run_psql(command)
-
     command2 = "CREATE DATABASE %(db_name)s WITH OWNER=%(db_main_user)s;" % env
-    run_psql(command2)
-
     command3 = "REVOKE ALL ON DATABASE %(db_name)s FROM public;" % env
+
+    msg = '{}\n{}\n{}'.format(command, command2, command3)
+    msg = msg + '\nConfirm create %s: \n y - continue; \n n - abort \n>' % database
+    if not confirm_operation(msg, expected='y'):
+        return
+
+    run_psql(command)
+    run_psql(command2)
     run_psql(command3)
 
 
@@ -171,27 +187,37 @@ def remove_extra_user(user=None, database=None, password=None):
 @task
 def remove_db_user(user=None, database=None):
 
-    user = raw_input('Username: \n>')
+    if not user:
+        user = raw_input('Username: \n>')
+    if not database:
+        database = raw_input('Database Name: \n>')
+
     env.db_main_user = user
-    database = raw_input('Database Name: \n>')
     env.db_name = database
 
     command = """
     -- TERMINATE CONNECTIONS OF ALL USERS CONNECTED TO <DBNAME>
     DROP DATABASE %(db_name)s;""" % env
-    run_psql(command)
 
     command2 = """
     DROP ROLE %(db_main_user)s;
     DROP ROLE %(db_name)s""" % env
+
+    msg = '{}\n{}'.format(command, command2)
+    msg = msg + '\nConfirm delete %s: \n y - continue; \n n - abort \n>' % database
+    if not confirm_operation(msg, expected='y'):
+        return
+
+    run_psql(command)
     run_psql(command2)
 
 
 @task
-def restore(database=None, dump_path=None):
+def restore(db_owner=None, database=None, dump_path=None):
 
-    user = raw_input('Username Owner Database: \n>')
-    env.db_main_user = user
+    if not db_owner:
+        db_owner = raw_input('Username Owner Database: \n>')
+    env.db_main_user = db_owner
 
     if not database:
         database = raw_input('Database: \n>')
@@ -213,13 +239,25 @@ def restore(database=None, dump_path=None):
         restore_command.append(env.extra_restore)
     restore_command.append(' < ' + env.path)
 
-    cmd = ' '.join(restore_command)
-    run_local(cmd)
+    command = ' '.join(restore_command)
+
+    msg = command
+    msg = msg + '\nConfirm restore %s: \n y - continue; \n n - abort \n>' % database
+    if not confirm_operation(msg, expected='y'):
+        return
+
+    run_local(command)
 
 
 @task
-def dump(database=None, dump_path=None):
+def dump(database, dump_path=None):
 
+    db_info = dj_database_url.parse(env.database_url)
+    database = db_info.get('NAME', '') or database
+    if db_info.get('NAME', ''):
+        print(u'A database({0}) was defined in the database_url'.format(database))
+        msg = 'Confirm database. \ny - continue; \nn - abort \n>'
+        confirm_operation(msg, expected='y')
     if not database:
         database = raw_input('Database: \n>')
     env.db_name = database
@@ -231,13 +269,3 @@ def dump(database=None, dump_path=None):
         % env
 
     run_local(cmd)
-
-
-@task
-def dumpall(dump_path=None):
-    pass
-
-
-@task
-def restoreall(database=None, dump_path=None):
-    pass
