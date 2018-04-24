@@ -7,11 +7,13 @@ pgmanager was built on top of fabric. Also is based on the guide [Shared Postgre
 * Create an aditional user to a database
 * Remove an aditional user
 * Remove database + main user
+* Dump database (binary or plan sql)
+* Restore database (binary or plan sql)
 
 ## Install
 
 ### Dependences
-Before install pgmanager, is need install the lastest version of postgres-client.
+Before install pgmanager, is need install the latest version of postgres-client.
 
 ### Install
 Install pgmanager globally using this command
